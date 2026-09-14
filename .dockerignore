@@ -1,0 +1,11 @@
+.git
+.env
+.venv
+venv
+__pycache__
+*.pyc
+chroma
+uploaded_data
+temp_img
+.pytest_cache
+*.log
