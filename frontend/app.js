@@ -8,6 +8,19 @@ const API = (window.location.hostname === "127.0.0.1" || window.location.hostnam
     ? "http://127.0.0.1:8000"
     : "https://vast-rice-carry.loca.lt";
 
+// Automatically bypass localtunnel reminder interstitial screen on fetch requests
+const _nativeFetch = window.fetch;
+window.fetch = function (url, options = {}) {
+    options = options || {};
+    options.headers = options.headers || {};
+    if (options.headers instanceof Headers) {
+        options.headers.set("Bypass-Tunnel-Reminder", "true");
+    } else {
+        options.headers["Bypass-Tunnel-Reminder"] = "true";
+    }
+    return _nativeFetch(url, options);
+};
+
 // Session ID for conversation memory (persists across questions in same tab)
 const SESSION_ID = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
