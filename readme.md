@@ -6,7 +6,7 @@ Powered by Google Gemini, Fast Direct RAG, hybrid BM25 + vector search, and a mo
 
 ---
 
-## 🌟 Features & Tech Stack
+## Features & Tech Stack
 
 ### 1. Document Ingestion & OCR
 Automatically extract text from native PDFs and scanned images.
@@ -48,7 +48,7 @@ Track engagement during study sessions via webcam.
 
 ---
 
-## 🛠️ Overall Tech Stack Summary
+## Overall Tech Stack Summary
 
 | Layer | Technology |
 |---|---|
@@ -65,7 +65,7 @@ Track engagement during study sessions via webcam.
 
 ---
 
-## 📐 Architecture
+## Architecture
 
 ### Smart Learning Flow
 ```mermaid
@@ -101,7 +101,7 @@ graph TD
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Installation
 1. **Clone & Setup Environment**:
@@ -128,7 +128,7 @@ Access the UI at: `http://127.0.0.1:8000/static/index.html`
 
 ---
 
-## 🧪 Testing
+## Testing
 The project includes a comprehensive suite of 28 unit and integration tests.
 ```bash
 python -m pytest tests/ -v
@@ -136,5 +136,5 @@ python -m pytest tests/ -v
 
 ---
 
-## 📝 License
+## License
 Developed as part of a Final Year Project (FYP).

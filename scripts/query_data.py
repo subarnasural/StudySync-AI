@@ -421,7 +421,7 @@ def query_rag(
                 else:
                     # Add a warning notice to the response
                     response_text += (
-                        "\n\n> ⚠️ *Note: Some parts of this answer may extend "
+                        "\n\n> *Note: Some parts of this answer may extend "
                         "beyond the uploaded source material.*"
                     )
         except Exception as exc:

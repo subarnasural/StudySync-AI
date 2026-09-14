@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="./styles.css?v=4.2.2">
+    <link rel="stylesheet" href="./styles.css?v=4.3.0">
 </head>
 
 <body>
@@ -32,22 +32,22 @@
             <!-- Segmented Workspace Switcher -->
             <nav class="segmented-control" id="workspaceTabs" aria-label="Workspace Views">
                 <button type="button" class="segment-btn workspace-tab active" data-view="all" onclick="switchWorkspaceView('all')">
-                    <span>✨</span> All Modules
+                    All Modules
                 </button>
                 <button type="button" class="segment-btn workspace-tab" data-view="kb" onclick="switchWorkspaceView('kb')">
-                    <span>📚</span> 1. Ingest Documents
+                    1. Ingest Documents
                 </button>
                 <button type="button" class="segment-btn workspace-tab" data-view="chat" onclick="switchWorkspaceView('chat')">
-                    <span>💬</span> 2. Ask Tutor
+                    2. Ask Tutor
                 </button>
                 <button type="button" class="segment-btn workspace-tab" data-view="ocr" onclick="switchWorkspaceView('ocr')">
-                    <span>🔍</span> OCR Vision
+                    OCR Vision
                 </button>
                 <button type="button" class="segment-btn workspace-tab" data-view="analytics" onclick="switchWorkspaceView('analytics')">
-                    <span>📊</span> Progress
+                    Progress
                 </button>
                 <button type="button" class="segment-btn workspace-tab" data-view="focus" onclick="switchWorkspaceView('focus')">
-                    <span>📹</span> Focus Mode
+                    Focus Mode
                 </button>
             </nav>
 
@@ -57,7 +57,7 @@
                     <span id="headerStatusText">Ready to Learn</span>
                 </div>
                 <button type="button" id="headerResetBtn" class="btn-reset-header" onclick="resetApp()" title="Reset all data and indexed documents">
-                    <span>🗑️</span> Reset App
+                    Reset App
                 </button>
             </div>
         </div>
@@ -78,19 +78,19 @@
             <!-- Gemini-Style Student Inspiration Cards -->
             <div class="prompt-chips-container" aria-label="Quick Study Inspiration">
                 <button type="button" class="prompt-chip" onclick="fillPrompt('Explain the core concept in simple terms with an everyday analogy.')">
-                    <span class="chip-title">💡 Explain Simply</span>
+                    <span class="chip-title">Explain Simply</span>
                     <span class="chip-subtitle">Break down difficult lecture concepts with an analogy</span>
                 </button>
                 <button type="button" class="prompt-chip" onclick="fillPrompt('Give me a high-yield exam summary of the main formulas and theorems.')">
-                    <span class="chip-title">🎯 Exam Prep Summary</span>
+                    <span class="chip-title">Exam Prep Summary</span>
                     <span class="chip-subtitle">High-yield revision notes, key formulas & definitions</span>
                 </button>
                 <button type="button" class="prompt-chip" onclick="fillPrompt('Provide a step-by-step example problem and solution based on the notes.')">
-                    <span class="chip-title">⚡ Step-by-Step Solver</span>
+                    <span class="chip-title">Step-by-Step Solver</span>
                     <span class="chip-subtitle">Walkthrough of complex homework or textbook problems</span>
                 </button>
                 <button type="button" class="prompt-chip" onclick="fillPrompt('What are the most common student misconceptions on this topic?')">
-                    <span class="chip-title">⚠️ Common Pitfalls</span>
+                    <span class="chip-title">Common Pitfalls</span>
                     <span class="chip-subtitle">Key misconceptions to avoid on quizzes and midterms</span>
                 </button>
             </div>
@@ -128,7 +128,6 @@
             <section class="panel panel-half" id="knowledgePanel" style="grid-column: span 12;">
                 <div class="panel-head">
                     <div class="panel-title-wrapper">
-                        <div class="panel-icon-badge">📚</div>
                         <div>
                             <h2>Step 1: Ingest Course Documents</h2>
                             <p class="panel-copy" style="margin: 0; font-size: 0.86rem;">
@@ -140,7 +139,6 @@
                 </div>
 
                 <div class="ingestion-status-banner">
-                    <span>💡</span>
                     <span><strong>Prerequisite:</strong> Select your PDF lecture slides or notes below, click <strong>Upload Files</strong>, and then click <strong>Build Index</strong> to enable question answering.</span>
                 </div>
 
@@ -158,7 +156,7 @@
                         type="button"
                         onclick="uploadPDFs()"
                     >
-                        📤 1. Upload Files
+                        1. Upload Files
                     </button>
 
                     <button
@@ -167,7 +165,7 @@
                         type="button"
                         onclick="buildDB()"
                     >
-                        ⚡ 2. Build Index
+                        2. Build Index
                     </button>
 
                     <button
@@ -177,7 +175,7 @@
                         onclick="resetApp()"
                         title="Permanently remove all indexed materials and clear analytics"
                     >
-                        🗑️ Reset All Data
+                        Reset All Data
                     </button>
                 </div>
 
@@ -187,7 +185,7 @@
 
                 <!-- Indexed Files List -->
                 <div id="fileListSection" class="file-list-section" style="display: none;">
-                    <h3 class="file-list-title">📚 Currently Indexed Course Materials</h3>
+                    <h3 class="file-list-title">Currently Indexed Course Materials</h3>
                     <div id="fileListContainer" class="file-list-container"></div>
                 </div>
             </section>
@@ -198,7 +196,6 @@
             <section class="panel panel-wide" id="chatPanel">
                 <div class="panel-head">
                     <div class="panel-title-wrapper">
-                        <div class="panel-icon-badge">💬</div>
                         <div>
                             <h2>Step 2: Ask <span style="white-space: nowrap;">StudySync AI</span></h2>
                             <p class="panel-copy" style="margin: 0; font-size: 0.86rem;">
@@ -225,7 +222,7 @@
                             type="button"
                             onclick="sendChat()"
                         >
-                            Ask ✦
+                            Ask
                         </button>
                     </div>
 
@@ -247,8 +244,8 @@
                             <div class="lang-selector">
                                 <span class="field-label" style="margin: 0;">Language:</span>
                                 <select id="langSelect" class="lang-select" onchange="setLanguage(this.value)">
-                                    <option value="english" selected>🇬🇧 English</option>
-                                    <option value="hindi">🇮🇳 Hindi (हिंदी)</option>
+                                    <option value="english" selected>English</option>
+                                    <option value="hindi">Hindi (हिंदी)</option>
                                 </select>
                             </div>
                         </div>
@@ -262,7 +259,6 @@
                 <!-- Assistant Response -->
                 <div id="chatResult" class="result result-large">
                     <div style="color: var(--text-muted); text-align: center; padding: 28px 12px;">
-                        <span style="font-size: 2.2rem; display: block; margin-bottom: 8px;">📖</span>
                         Your grounded academic answers, LaTeX math formulas, step-by-step reasoning, and source citations will appear here.
                     </div>
                 </div>
@@ -271,7 +267,7 @@
                 <div id="quizActionArea" class="quiz-action-area" style="display: none;">
                     <div class="actions">
                         <button id="genQuizBtn" type="button" onclick="generateQuiz()">
-                            ✨ Generate Topic Quiz to Test Your Knowledge
+                            Generate Topic Quiz to Test Your Knowledge
                         </button>
                     </div>
                 </div>
@@ -288,7 +284,6 @@
             <section class="panel panel-half" id="ocrPanel">
                 <div class="panel-head">
                     <div class="panel-title-wrapper">
-                        <div class="panel-icon-badge">🔍</div>
                         <h2>OCR Vision Extractor</h2>
                     </div>
                     <span class="chip">Vision OCR</span>
@@ -312,7 +307,7 @@
                         class="btn-ghost"
                         onclick="extractText()"
                     >
-                        🔬 Extract Text
+                        Extract Text
                     </button>
 
                     <button
@@ -322,7 +317,7 @@
                         onclick="addOcrToDatabase()"
                         style="display: none;"
                     >
-                        📥 Index Slide
+                        Index Slide
                     </button>
 
                     <button
@@ -330,13 +325,12 @@
                         type="button"
                         onclick="copyToChat()"
                     >
-                        📝 Use in Query
+                        Use in Query
                     </button>
                 </div>
 
                 <div id="ocrResult" class="result ocr-result-box">
                     <div class="ocr-placeholder-content">
-                        <span class="ocr-placeholder-icon">📷</span>
                         <span>OCR output and confidence score will appear here.</span>
                     </div>
                 </div>
@@ -348,7 +342,6 @@
             <section class="panel panel-half" id="attentionPanel">
                 <div class="panel-head">
                     <div class="panel-title-wrapper">
-                        <div class="panel-icon-badge">📹</div>
                         <h2>Focus & Attention Mode</h2>
                     </div>
                     <span class="chip">AI Vision</span>
@@ -372,7 +365,6 @@
                         "
                     >
                     <div id="videoPlaceholder" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 0.95rem; font-weight: 500; gap: 8px;">
-                        <span style="font-size: 2.4rem;">📹</span>
                         <span>Camera Feed Offline</span>
                         <span style="font-size: 0.78rem; color: var(--text-faint);">Click "Start Focus Session" below</span>
                     </div>
@@ -385,7 +377,7 @@
                         class="btn-ghost"
                         onclick="startAttention()"
                     >
-                        🎯 Start Focus Session
+                        Start Focus Session
                     </button>
 
                     <button
@@ -393,7 +385,7 @@
                         type="button"
                         onclick="stopAttention()"
                     >
-                        ⏹ Stop Session
+                        Stop Session
                     </button>
                 </div>
 
@@ -408,7 +400,6 @@
             <section class="panel panel-wide" id="dashboardPanel">
                 <div class="panel-head">
                     <div class="panel-title-wrapper">
-                        <div class="panel-icon-badge">📊</div>
                         <h2>Learning Analytics & Mastery</h2>
                     </div>
                     <span class="chip">Progress</span>
@@ -477,7 +468,7 @@
     ></script>
 
     <!-- APP JS -->
-    <script src="./app.js?v=4.2.2"></script>
+    <script src="./app.js?v=4.3.0"></script>
 
 </body>
 </html>

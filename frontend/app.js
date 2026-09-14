@@ -3,14 +3,10 @@
    Version: 3.0.0 (Agentic RAG)
 ========================================= */
 
-// If deploying frontend on Vercel and backend on Render/Railway, paste your backend URL here:
-// Example: const CLOUD_BACKEND_URL = "https://studysync-ai.onrender.com";
-const CLOUD_BACKEND_URL = "";
-
 // Automatically adapt API URL for both local development and cloud deployments
 const API = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
     ? "http://127.0.0.1:8000"
-    : (CLOUD_BACKEND_URL || window.STUDYSYNC_API_URL || window.location.origin);
+    : (window.STUDYSYNC_API_URL || window.location.origin);
 
 // Session ID for conversation memory (persists across questions in same tab)
 const SESSION_ID = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -200,7 +196,6 @@ async function loadFileList() {
             if (headerStatus) headerStatus.textContent = `${data.files.length} Document(s) Ready`;
             container.innerHTML = data.files.map(file => `
                 <div class="file-item">
-                    <span class="file-icon">📄</span>
                     <span class="file-name">${file.filename}</span>
                     <span class="file-meta">${file.pages} pages · ${file.chunks} chunks</span>
                 </div>
@@ -367,7 +362,7 @@ async function sendChat() {
     if (!question) return;
 
     setBusy("askBtn", true);
-    setResult("chatResult", "⏳ Analyzing context and generating answer...", "state-loading");
+    setResult("chatResult", "Analyzing context and generating answer...", "state-loading");
 
     // Hide quiz area until new response comes in
     document.getElementById("quizActionArea").style.display = "none";
@@ -405,10 +400,10 @@ async function sendChat() {
         if (sourceDetails.length > 0) {
             const lines = sourceDetails.map(s => {
                 const page = s.page ? ` (Page ${s.page})` : "";
-                return `- 📄 **${s.filename}**${page}`;
+                return `- **${s.filename}**${page}`;
             });
             const unique = [...new Set(lines)];
-            sourceMd = "\n\n---\n### 📚 Sources\n" + unique.join("\n");
+            sourceMd = "\n\n---\n### Sources\n" + unique.join("\n");
         }
 
         // Build Agentic RAG metadata footer
@@ -428,27 +423,27 @@ async function sendChat() {
 
         // Retrieval method
         if (data.retrieval_method) {
-            metaParts.push(`🔍 ${data.retrieval_method === 'hybrid_bm25_vector' ? 'Hybrid Retrieval' : data.retrieval_method}`);
+            metaParts.push(data.retrieval_method === 'hybrid_bm25_vector' ? 'Hybrid Retrieval' : data.retrieval_method);
         }
 
         agentMd = `\n\n*${metaParts.join(' · ')}*`;
 
         // Query rewriting info
         if (data.rewritten_queries && data.rewritten_queries.length > 1) {
-            agentMd += `\n*🔄 Query expanded into ${data.rewritten_queries.length} search queries*`;
+            agentMd += `\n*Query expanded into ${data.rewritten_queries.length} search queries*`;
         }
 
         // Retrieval retry info
         if (data.retrieval_attempts && data.retrieval_attempts > 1) {
-            agentMd += `\n*🔁 Retrieval refined ${data.retrieval_attempts} time(s) for better results*`;
+            agentMd += `\n*Retrieval refined ${data.retrieval_attempts} time(s) for better results*`;
         }
 
         // Grounding verification badge
         if (data.grounding_verified === true) {
             const pct = data.grounding_score ? Math.round(data.grounding_score * 100) : 100;
-            agentMd += `\n*🛡️ Answer verified against sources (${pct}% confidence)*`;
+            agentMd += `\n*Answer verified against sources (${pct}% confidence)*`;
         } else if (data.grounding_verified === false) {
-            agentMd += `\n*⚠️ Some claims could not be fully verified against sources*`;
+            agentMd += `\n*Some claims could not be fully verified against sources*`;
         }
 
         setResult("chatResult", answerText + sourceMd + agentMd, "state-success");
@@ -476,7 +471,7 @@ async function generateQuiz() {
 
     setBusy("genQuizBtn", true);
     quizResult.style.display = "block";
-    quizResult.innerHTML = "<p class='state-loading'>✨ Crafting custom quiz for you...</p>";
+    quizResult.innerHTML = "<p class='state-loading'>Crafting custom quiz for you...</p>";
 
     try {
         const response = await fetch(`${API}/quiz/`, {
@@ -513,7 +508,7 @@ async function generateQuiz() {
 function renderQuiz(questions) {
     const container = document.getElementById("quizResult");
 
-    let html = `<h3>🧠 Topic Check: ${lastTopic.replace(/_/g, ' ')}</h3>`;
+    let html = `<h3>Topic Check: ${lastTopic.replace(/_/g, ' ')}</h3>`;
 
     questions.forEach((q, idx) => {
         const qId = `q_${idx}`;
@@ -573,7 +568,7 @@ function selectOption(qId, oIdx, explanation) {
     });
 
     feedback.style.display = "block";
-    feedback.innerHTML = `<strong>${isCorrect ? "✅ Correct!" : "❌ Not quite."}</strong> ${explanation}`;
+    feedback.innerHTML = `<strong>${isCorrect ? "Correct!" : "Not quite."}</strong> ${explanation}`;
 
     // Track quiz session progress
     quizSessionAnswered++;
@@ -664,12 +659,11 @@ async function loadDashboard() {
         if (data.recent_activity.length > 0) {
             timeline.innerHTML = data.recent_activity.map(a => {
                 const date = new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const icon = a.type === "question" ? "❓" : "📝";
                 const label = a.type === "question" ? "Asked about" : "Took quiz on";
                 return `
                     <div class="activity-item">
                         <div class="activity-time">${date}</div>
-                        <div>${icon} ${label} <strong>${a.topic.replace(/_/g, ' ')}</strong></div>
+                        <div>${label} <strong>${a.topic.replace(/_/g, ' ')}</strong></div>
                     </div>
                 `;
             }).join("");
@@ -837,7 +831,7 @@ function switchWorkspaceView(view) {
 
 async function resetApp() {
     const confirmed = confirm(
-        "⚠️ RESET ALL DATA & INDEXED DOCUMENTS?\n\n" +
+        "RESET ALL DATA & INDEXED DOCUMENTS?\n\n" +
         "This will permanently:\n" +
         "• Delete all uploaded course documents and files\n" +
         "• Erase the ChromaDB vector index\n" +
@@ -857,7 +851,7 @@ async function resetApp() {
         if (btn) {
             btn.disabled = true;
             btn.dataset.originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ Resetting...";
+            btn.innerHTML = "Resetting...";
         }
     });
 
@@ -881,12 +875,11 @@ async function resetApp() {
             setResult(
                 "chatResult",
                 "<div style='color: var(--text-muted); text-align: center; padding: 28px 12px;'>" +
-                "<span style='font-size: 2.2rem; display: block; margin-bottom: 8px;'>📖</span>" +
                 "System reset complete. Please upload course materials in Step 1 to begin asking questions." +
                 "</div>"
             );
             lastOcrText = "";
-            setResult("ocrResult", "<div class=\"ocr-placeholder-content\"><span class=\"ocr-placeholder-icon\">📷</span><span>OCR output and confidence score will appear here.</span></div>");
+            setResult("ocrResult", "<div class=\"ocr-placeholder-content\"><span>OCR output and confidence score will appear here.</span></div>");
             const indexSlideBtn = document.getElementById("addOcrToDbBtn");
             if (indexSlideBtn) indexSlideBtn.style.display = "none";
 
@@ -908,13 +901,13 @@ async function resetApp() {
             const headerStatus = document.getElementById("headerStatusText");
             if (headerStatus) headerStatus.textContent = "Upload Documents First";
 
-            alert("✅ Reset Complete!\n\nAll indexed documents, vector stores, and analytics have been cleared.");
+            alert("Reset Complete!\n\nAll indexed documents, vector stores, and analytics have been cleared.");
         } else {
-            alert(`❌ Reset failed: ${data.detail || "Server error"}`);
+            alert(`Reset failed: ${data.detail || "Server error"}`);
         }
     } catch (err) {
         console.error("Reset request error:", err);
-        alert("❌ Failed to reach backend server to perform reset.");
+        alert("Failed to reach backend server to perform reset.");
     } finally {
         resetBtns.forEach(btn => {
             if (btn && btn.dataset.originalText) {
