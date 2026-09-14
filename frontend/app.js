@@ -6,7 +6,7 @@
 // Automatically adapt API URL for both local development and cloud deployments
 const API = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
     ? "http://127.0.0.1:8000"
-    : "https://bright-tigers-sing.loca.lt";
+    : "https://vast-rice-carry.loca.lt";
 
 // Session ID for conversation memory (persists across questions in same tab)
 const SESSION_ID = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
