@@ -15,7 +15,9 @@ def _load_dataset():
 
 
 def _assert_rag_matches_keywords(question: str, expected_keywords: list[str], min_hits: int = 1):
-    response_text = query_rag(question)
+    result = query_rag(question)
+    # query_rag returns a dict: {answer, sources, source_details, chunks_used, processing_time_ms}
+    response_text = result.get("answer", "")
     normalized = response_text.lower()
     hits = [kw for kw in expected_keywords if kw.lower() in normalized]
 
@@ -26,6 +28,10 @@ def _assert_rag_matches_keywords(question: str, expected_keywords: list[str], mi
         f"Expected keywords: {expected_keywords}\n"
         f"Response: {response_text}"
     )
+
+    # Verify response structure
+    assert "sources" in result, "Response missing 'sources' field"
+    assert "chunks_used" in result, "Response missing 'chunks_used' field"
 
 
 def test_perceptron_response_contains_expected_terms():

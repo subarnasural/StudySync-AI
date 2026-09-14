@@ -1,4 +1,4 @@
-﻿.venv/
+.venv/
 venv/
 __pycache__/
 *.pyc
@@ -15,3 +15,6 @@ Thumbs.db
 .vscode/
 temp_img/
 *.log
+.pytest_cache/
+*progress*.json
+scratch/

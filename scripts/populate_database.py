@@ -1,102 +1,74 @@
+"""
+scripts/populate_database.py
+=============================
+CLI tool to (re-)index all supported files in the upload directory.
+
+Usage
+-----
+    python -m scripts.populate_database            # incremental index
+    python -m scripts.populate_database --reset    # wipe DB then re-index
+"""
+
 import argparse
+import logging
 import os
-import shutil
-import time
-from dotenv import load_dotenv; load_dotenv()
-from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
-from langchain_chroma import Chroma
-
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from backend.llm_manager import get_embedding_function
 
+from dotenv import load_dotenv
 
-CHROMA_PATH = os.path.abspath("chroma")
-# Standardize with web uploads
+load_dotenv()
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from backend.utils.indexer import clear_index, index_directory
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
 DATA_PATH = os.path.join("uploaded_data", "files")
 
-def main(reset_db=False):
-    import sys
+
+def main(reset_db: bool = False) -> None:
+    # Allow --reset from CLI even when called as function
     if len(sys.argv) > 1:
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--reset", action="store_true", help="Reset the database.")
+        parser = argparse.ArgumentParser(description="Populate ChromaDB from uploaded files.")
+        parser.add_argument("--reset", action="store_true", help="Wipe the database before indexing.")
         args, _ = parser.parse_known_args()
         reset_db = reset_db or args.reset
 
     if reset_db:
-        print("Clearing Database")
-        clear_database()
+        logger.info("--reset flag set: clearing existing ChromaDB …")
+        clear_index()
 
-    documents = load_documents()
-    chunks = split_documents(documents)
-    add_to_chroma(chunks)
+    if not os.path.exists(DATA_PATH):
+        logger.warning("Data directory '%s' does not exist. Nothing to index.", DATA_PATH)
+        return
 
+    logger.info("Starting indexing from '%s' …", os.path.abspath(DATA_PATH))
+    results = index_directory(DATA_PATH)
 
-def load_documents():
-    loader = PyPDFDirectoryLoader(DATA_PATH)
-    return loader.load()
+    if not results:
+        logger.info("No files were processed.")
+        return
 
+    total_added   = sum(r["chunks_added"]   for r in results)
+    total_skipped = sum(r["chunks_skipped"] for r in results)
 
-def split_documents(documents: list[Document]):
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=2000,
-        chunk_overlap=200,
-        length_function=len,
-    )
-    return splitter.split_documents(documents)
+    logger.info("=" * 50)
+    logger.info("Indexing complete.")
+    logger.info("  Files processed : %d", len(results))
+    logger.info("  Chunks added    : %d", total_added)
+    logger.info("  Chunks skipped  : %d (already in DB)", total_skipped)
+    logger.info("=" * 50)
 
-
-def add_to_chroma(chunks: list[Document]):
-    db = Chroma(
-        persist_directory=CHROMA_PATH,
-        embedding_function=get_embedding_function(),
-    )
-
-    chunks_with_ids = calculate_chunk_ids(chunks)
-
-    existing_items = db.get(include=[])
-    existing_ids = set(existing_items["ids"])
-    print(f"Number of existing documents in DB: {len(existing_ids)}")
-
-    new_chunks = [
-        chunk for chunk in chunks_with_ids
-        if chunk.metadata["id"] not in existing_ids
-    ]
-
-    if new_chunks:
-        print(f"Adding new documents: {len(new_chunks)}")
-        new_ids = [chunk.metadata["id"] for chunk in new_chunks]
-        db.add_documents(new_chunks, ids=new_ids)
-        # ❌ db.persist() REMOVED
-    else:
-        print("No new documents to add")
-
-
-def calculate_chunk_ids(chunks: list[Document]):
-    last_page_id = None
-    current_chunk_index = 0
-
-    for chunk in chunks:
-        source = chunk.metadata.get("source")
-        page = chunk.metadata.get("page")
-        current_page_id = f"{source}:{page}"
-
-        if current_page_id == last_page_id:
-            current_chunk_index += 1
-        else:
-            current_chunk_index = 0
-
-        chunk.metadata["id"] = f"{current_page_id}:{current_chunk_index}"
-        last_page_id = current_page_id
-
-    return chunks
-
-
-def clear_database():
-    if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
+    for r in results:
+        logger.info(
+            "  %-40s  added=%d  skipped=%d",
+            r["filename"], r["chunks_added"], r["chunks_skipped"],
+        )
 
 
 if __name__ == "__main__":

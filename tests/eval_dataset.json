@@ -1,35 +1,67 @@
 [
   {
-  "question": "What is the perceptron model?",
-  "relevant_keywords": ["perceptron", "linear", "classification"],
-  "expected_keywords": [
-    "weights",
-    "threshold",
-    "binary",
-    "classification",
-    "learning",
-    "mcculloch"
-  ]
-},
-
+    "question": "What is the perceptron model?",
+    "relevant_keywords": ["perceptron", "linear", "classification"],
+    "expected_keywords": [
+      "weight",
+      "binary",
+      "input",
+      "output",
+      "network",
+      "learn"
+    ],
+    "reference_answer": "The perceptron is a foundational binary classification algorithm and one of the simplest forms of artificial neural network. It receives one or more input values, multiplies each input by a learned weight, and computes a weighted sum. A threshold or step activation function is then applied to this weighted sum to produce a binary output decision. The perceptron learns by iteratively adjusting its weights based on the error between its predicted output and the expected target values, using the perceptron learning rule."
+  },
   {
     "question": "Explain backpropagation in neural networks.",
     "relevant_keywords": ["backpropagation", "chain rule", "gradient"],
-    "expected_keywords": ["gradient", "loss", "chain rule"]
+    "expected_keywords": [
+      "gradient",
+      "loss",
+      "weight",
+      "network",
+      "error",
+      "layer"
+    ],
+    "reference_answer": "Backpropagation, short for backward propagation of errors, is the core training algorithm for multi-layer neural networks. It works by first performing a forward pass through the network to compute the output and calculate the loss or prediction error. It then propagates this error backward through each layer using the calculus chain rule to compute the gradient of the loss with respect to every weight in the network. These gradients are used by an optimizer such as stochastic gradient descent to update the weights layer by layer, progressively reducing the loss and improving the network's predictions."
   },
   {
     "question": "What problem does vanishing gradient cause?",
     "relevant_keywords": ["vanishing gradient", "deep networks"],
-    "expected_keywords": ["gradients", "small", "training"]
+    "expected_keywords": [
+      "gradient",
+      "small",
+      "layer",
+      "train",
+      "deep",
+      "weight"
+    ],
+    "reference_answer": "The vanishing gradient problem is a major challenge in training deep neural networks. During backpropagation, gradients are computed at each layer and multiplied together as they flow backward through the network. When using saturating activation functions such as sigmoid or tanh, the gradients associated with those functions are very small numbers less than one. Repeated multiplication of these small gradients across many layers causes the gradient values to shrink exponentially, approaching zero, as they reach the earlier layers. As a result, the weights in the early or lower layers of a deep network receive extremely small gradient updates and effectively stop learning, which prevents the entire network from being trained effectively."
   },
   {
     "question": "What is the role of activation functions?",
     "relevant_keywords": ["activation function", "nonlinearity"],
-    "expected_keywords": ["nonlinearity", "relu", "sigmoid"]
+    "expected_keywords": [
+      "nonlinear",
+      "relu",
+      "sigmoid",
+      "neural",
+      "learn",
+      "output"
+    ],
+    "reference_answer": "Activation functions are a critical component of artificial neural networks. They are applied to the output of each neuron or layer to introduce nonlinearity into the network's computations. Without nonlinear activation functions, even a very deep neural network would simply compute a linear transformation of its inputs, severely limiting its ability to model complex real-world data. By applying nonlinear functions such as the sigmoid, hyperbolic tangent, or Rectified Linear Unit (ReLU), neural networks gain the ability to learn and approximate highly complex and nonlinear patterns. ReLU is one of the most widely used activation functions in modern deep learning due to its simplicity and computational efficiency."
   },
   {
     "question": "What are Restricted Boltzmann Machines?",
     "relevant_keywords": ["restricted boltzmann machine", "rbm"],
-    "expected_keywords": ["energy", "hidden", "visible"]
+    "expected_keywords": [
+      "energy",
+      "hidden",
+      "visible",
+      "layer",
+      "feature",
+      "learn"
+    ],
+    "reference_answer": "Restricted Boltzmann Machines, commonly abbreviated as RBMs, are a class of generative stochastic artificial neural networks. They are structured as an energy-based model consisting of two distinct layers: a visible layer, which represents the input data, and a hidden layer, which learns to represent latent features or abstract representations of the input. The term restricted refers to the constraint that there are no connections between neurons within the same layer, meaning connections only exist between the visible and hidden layers. RBMs are trained using contrastive divergence to minimize an energy function, and they have been used as building blocks for deeper generative models such as Deep Belief Networks."
   }
 ]

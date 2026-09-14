@@ -1,0 +1,281 @@
+AI TEACHING ASSISTANT - COMPLETE TECHNICAL STACK DOCUMENTATION
+================================================================================
+Generated on: 2026-05-16
+Project: AI Teaching Assistant (Smart Learning Platform)
+Purpose: Viva Preparation, Technical Explanation, and Architecture Study
+================================================================================
+
+--------------------------------------------------------------------------------
+1. PROJECT OVERVIEW & ARCHITECTURE
+--------------------------------------------------------------------------------
+
+The AI Teaching Assistant is a Retrieval-Augmented Generation (RAG) platform 
+designed to help students interact with academic materials. It combines 
+Computer Vision (OCR/Attention Monitoring) with Large Language Models (Gemini) 
+to provide a holistic learning experience.
+
+Backend Architecture:
+- Framework: FastAPI (Python)
+- Architecture Type: Modular Service Layer
+- Key Layers: 
+    * API Layer (main.py)
+    * Service Layer (llm_manager, attention_tracker)
+    * Utility Layer (ocr_engine, document_processor, indexer)
+    * Persistence Layer (ChromaDB + JSON)
+
+Frontend Architecture:
+- Stack: HTML5, CSS3, Vanilla JavaScript
+- Pattern: Single Page Application (SPA) style with Fetch API communication
+- Features: Real-time video processing (via OpenCV backend), Markdown rendering, 
+  MathJax support for equations.
+
+--------------------------------------------------------------------------------
+2. CORE BACKEND TECHNOLOGIES
+--------------------------------------------------------------------------------
+
+Technology Name: Python 3.x
+---------------------------
+- What it is: A high-level, interpreted programming language.
+- Why it is used: Industry standard for AI/ML with rich library support.
+- Where it is used: Entire backend logic.
+- Problem it solves: Rapid development of complex AI pipelines.
+- Advantages: Huge ecosystem, readability, great community support.
+- Alternatives: Node.js, Go, Java.
+- Internal working: Interpreted bytecode execution.
+
+Technology Name: FastAPI
+------------------------
+- Type: Backend Framework
+- Used In: backend/main.py
+- Purpose: Build RESTful APIs to communicate between frontend and AI services.
+- Why Chosen: High performance, async support, automatic Pydantic validation, 
+  and built-in Swagger documentation.
+- How It Works: Uses Starlette for web parts and Pydantic for data parts. Handles 
+  requests asynchronously to ensure the UI remains responsive.
+- Integration Flow: Frontend sends JSON via Fetch -> FastAPI validates -> 
+  Services process -> FastAPI returns JSON.
+
+Technology Name: Uvicorn
+------------------------
+- Type: ASGI Server
+- Purpose: Lightning-fast ASGI server implementation for Python.
+- Why Chosen: Required to run FastAPI with high concurrency.
+- Internal working: Handles the low-level network communication (TCP/HTTP) 
+  and passes requests to the FastAPI application.
+
+--------------------------------------------------------------------------------
+3. AI / MACHINE LEARNING & RAG STACK
+--------------------------------------------------------------------------------
+
+Technology Name: Google Gemini API (via LangChain)
+-------------------------------------------------
+- Type: Large Language Model (LLM)
+- Used In: backend/llm_manager.py
+- Purpose: Core "brain" of the project. Generates explanations, answers questions, 
+  and creates quizzes.
+- Why Chosen: Multi-modal capabilities, large context window, and high-quality 
+  reasoning compared to smaller models.
+- How It Works: Receives a "Prompt" (context + question) and predicts the next 
+  sequence of tokens to form a response.
+- Project Usage: Used in "Chat" for answering questions and "Quiz" for 
+  generating MCQ/Short-answer questions based on PDF text.
+
+Technology Name: Sentence Transformers (all-MiniLM-L6-v2)
+--------------------------------------------------------
+- Type: Embedding Model
+- Used In: backend/llm_manager.py
+- Purpose: Converts text chunks into mathematical vectors (embeddings).
+- Why Chosen: Lightweight, fast, and excellent for semantic similarity search.
+- Problem it solves: Computers can't compare "text" directly; they compare 
+  numbers. This model maps similar meanings to similar numbers.
+- Alternatives: OpenAI Embeddings, Cohere.
+
+Technology Name: LangChain
+--------------------------
+- Type: Orchestration Framework
+- Used In: Throughout backend/utils/
+- Purpose: Connects LLMs with external data (PDFs) and tools (ChromaDB).
+- Why Chosen: Standardizes the "RAG" pipeline.
+- Integration Flow: Document -> Text Splitter -> Embeddings -> ChromaDB -> 
+  Retriever -> LLM.
+
+Technology Name: RecursiveCharacterTextSplitter
+-----------------------------------------------
+- Type: Text Chunking Module
+- Used In: backend/utils/document_processor.py
+- Purpose: Breaks long PDF text into smaller, overlapping "chunks" (800 chars).
+- Why Chosen: Maintains semantic context by not cutting sentences mid-way and 
+  using overlap to preserve continuity between chunks.
+
+--------------------------------------------------------------------------------
+4. OCR & COMPUTER VISION STACK
+--------------------------------------------------------------------------------
+
+Technology Name: OpenCV (cv2)
+----------------------------
+- Type: Computer Vision Library
+- Used In: backend/utils/ocr_engine.py, backend/attention/attention_tracker.py
+- Purpose: Image preprocessing for OCR and face detection for attention mode.
+- Internal Working: 
+    * OCR: Performs deskewing, denoising, and thresholding to make text "pop".
+    * Attention: Uses Haar Cascades to find facial coordinates in webcam frames.
+- Advantages: Extremely fast, C++ optimized backend.
+
+Technology Name: Tesseract OCR (pytesseract)
+--------------------------------------------
+- Type: OCR Engine
+- Used In: backend/utils/ocr_engine.py
+- Purpose: Extracts raw text from images/scanned PDFs.
+- Project Usage: Handles "Vision" uploads and "Scanned PDF" pages.
+- How It Works: Uses LSTM-based neural networks to recognize character 
+  patterns in images. Supports English and Hindi in this project.
+
+Technology Name: pdf2image (Poppler)
+------------------------------------
+- Type: PDF Rendering Utility
+- Used In: backend/utils/document_processor.py
+- Purpose: Converts PDF pages into images so Tesseract can read scanned content.
+- Importance: Crucial for "Scanned" vs "Native" PDF detection logic.
+
+--------------------------------------------------------------------------------
+5. VECTOR DATABASE & PERSISTENCE
+--------------------------------------------------------------------------------
+
+Technology Name: ChromaDB
+-------------------------
+- Type: Vector Database
+- Used In: backend/utils/indexer.py
+- Purpose: Stores text embeddings for ultra-fast "Semantic Search".
+- Why Chosen: Open-source, local-first (no cloud cost), and integrates 
+  perfectly with LangChain.
+- Retrieval Flow: User asks question -> Question is embedded -> ChromaDB 
+  finds top 3 most similar chunks -> Chunks sent to Gemini as context.
+
+Technology Name: JSON (Analytics Storage)
+-----------------------------------------
+- Type: File-based Persistence
+- Used In: backend/analytics/progress_tracker.py
+- Purpose: Stores quiz scores, mastery levels, and question history.
+- Why Chosen: Simple, readable, and no complex SQL setup needed for 
+  lightweight analytics.
+
+--------------------------------------------------------------------------------
+5.5 DEPENDENCIES BREAKDOWN (requirements.txt)
+--------------------------------------------------------------------------------
+
+| Library | Purpose | Importance | Project Usage |
+|---------|---------|------------|---------------|
+| langchain | RAG Orchestration | Critical | Core pipeline logic |
+| pypdf | PDF Extraction | High | Native text extraction |
+| pillow | Image Handling | Medium | OCR image loading |
+| numpy | Array Math | Medium | OpenCV processing |
+| python-dotenv | Config Management | Low | Loading .env keys |
+| python-multipart | Form Data | Medium | Handling file uploads |
+| boto3 | AWS SDK | Low | Generic storage support |
+| pytest | Testing | Low | Unit tests in /tests |
+| sentence-transformers | NLP | High | Generating embeddings |
+| google-api-core | API Support | Medium | Gemini communication |
+
+--------------------------------------------------------------------------------
+6. ATTENTION MONITORING SYSTEM
+--------------------------------------------------------------------------------
+
+The Attention Tracker is a specialized CV module:
+1. Webcam Access: Initiated via `cv2.VideoCapture(0)`.
+2. Face Detection: Uses `Haar Cascade Frontal Face` model.
+3. Logic: 
+    * Finds the center of the detected face.
+    * Compares it to the screen's center point.
+    * If the face "drifts" too far (threshold 0.2), user is marked "Distracted".
+4. Scoring: (Attentive Frames / Total Frames) * 100.
+5. Files: backend/attention/attention_tracker.py.
+
+--------------------------------------------------------------------------------
+7. FRONTEND TECHNOLOGIES
+--------------------------------------------------------------------------------
+
+- HTML5: Semantic structure (Header, Main, Section).
+- CSS3: Modern "Glassmorphism" UI, Flexbox/Grid layout, Responsive design.
+- Vanilla JavaScript: Logic, API calls, and UI state management.
+- Fetch API: Asynchronous communication with the FastAPI backend.
+- Marked.js: Converts AI's Markdown responses into beautiful HTML.
+- MathJax: Renders complex mathematical formulas ($E=mc^2$) returned by Gemini.
+
+--------------------------------------------------------------------------------
+8. FULL PROJECT FLOW (THE PIPELINE)
+--------------------------------------------------------------------------------
+
+STEP 1: DATA INGESTION
+User uploads PDF -> Document Processor detects if Native or Scanned -> 
+OCR Engine (if scanned) or PyPDF (if native) extracts text -> 
+Text Splitter creates chunks -> Embeddings Model creates vectors -> 
+ChromaDB stores vectors + metadata.
+
+STEP 2: QUERY / RAG
+User asks question -> LLM Manager embeds question -> ChromaDB retrieves 
+relevant context -> Prompt Mode wraps context with "System Instructions" -> 
+Gemini generates grounded response.
+
+STEP 3: ENGAGEMENT
+User starts Attention Mode -> OpenCV processes webcam -> Real-time score 
+displayed -> Result saved to Analytics.
+
+STEP 4: ASSESSMENT
+User requests Quiz -> Gemini uses retrieved context to generate MCQs -> 
+User submits answers -> Progress Tracker updates mastery score.
+
+--------------------------------------------------------------------------------
+9. VIVA PREPARATION: COMMON QUESTIONS & ANSWERS
+--------------------------------------------------------------------------------
+
+Q1: Why use RAG instead of just sending the PDF to Gemini?
+A: RAG is more cost-effective and handles much larger datasets. It only sends 
+the relevant "pieces" of the PDF to the LLM, reducing "token bloat" and 
+improving accuracy.
+
+Q2: How do you handle scanned PDFs?
+A: We use a hybrid pipeline. We first check the text density with PyPDF. If 
+it's low, we use pdf2image to convert pages to PNGs and then run our 
+custom OCR Engine (OpenCV + Tesseract).
+
+Q3: What is "Semantic Search"?
+A: Unlike keyword search (Ctrl+F), semantic search finds meaning. If you 
+search "canine", it can find chunks about "dogs" because their vector 
+embeddings are mathematically close in vector space.
+
+Q4: Why ChromaDB and not a SQL database?
+A: SQL is for structured data. For AI, we need to perform "Nearest Neighbor" 
+searches on vectors, which ChromaDB is specifically optimized for.
+
+Q5: How does the attention tracker work?
+A: It's a geometric approach using Computer Vision. We track the face 
+bounding box and measure its displacement from the camera's center axis 
+to determine if the student is focused on the screen.
+
+--------------------------------------------------------------------------------
+10. SUMMARY OF TECHNOLOGIES
+--------------------------------------------------------------------------------
+
+MOST IMPORTANT TECHS:
+1. Gemini API (The Brain)
+2. FastAPI (The Bridge)
+3. ChromaDB (The Memory)
+4. OpenCV (The Eyes)
+
+CRITICAL MODULES:
+1. llm_manager.py: Orchestrates LLM calls and fallbacks.
+2. ocr_engine.py: Multi-stage image cleaning and text extraction.
+3. indexer.py: Manages the vector "Knowledge Base".
+
+PRESENTATION ORDER SUGGESTION:
+1. Problem Statement (Information overload in academics).
+2. The Solution (AI Teaching Assistant).
+3. The Architecture (FastAPI + RAG + Vision).
+4. Demo: Uploading a file (The Ingestion Flow).
+5. Demo: Asking a question (The Retrieval Flow).
+6. Demo: Attention Mode (The Engagement Flow).
+7. Conclusion & Future Scope (Multi-user support, Cloud deployment).
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

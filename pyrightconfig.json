@@ -1,0 +1,13 @@
+{
+  "include": ["backend", "scripts", "frontend"],
+  "exclude": ["chroma", "uploaded_data", ".venv", "venv", "__pycache__"],
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Windows",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "none",
+  "reportAttributeAccessIssue": "none",
+  "useLibraryCodeForTypes": true,
+  "venvPath": ".",
+  "extraPaths": ["."]
+}

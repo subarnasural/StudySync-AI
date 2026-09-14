@@ -1,13 +1,24 @@
 import io
+import logging
 import os
 import re
 import shutil
-from typing import Any, Dict
+import time
+from typing import Any, Dict, Optional
+import base64
+from langchain_core.messages import HumanMessage
 
 import cv2
 import numpy as np
 import pytesseract
+import pytesseract
+
+pytesseract.pytesseract.tesseract_cmd = (
+    r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+)
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 
 def _configure_tesseract_cmd() -> str | None:
@@ -39,6 +50,17 @@ def _configure_tesseract_cmd() -> str | None:
 
 _TESSERACT_CMD = _configure_tesseract_cmd()
 
+def _get_tesseract_langs() -> str:
+    """Detect available languages in Tesseract. Defaults to eng+hin if possible."""
+    try:
+        langs = pytesseract.get_languages(config="")
+        if "hin" in langs:
+            return "eng+hin"
+    except Exception:
+        pass
+    return "eng"
+
+_TESSERACT_LANGS = _get_tesseract_langs()
 
 def _deskew(binary_img: np.ndarray) -> np.ndarray:
     coords = np.column_stack(np.where(binary_img > 0))
@@ -115,9 +137,10 @@ def _text_quality_score(text: str) -> float:
     return min(1.0, quality_ratio) * 0.75 + min(avg_token_len / 6.0, 1.0) * 0.25
 
 
-def _ocr_with_confidence(processed_img: np.ndarray, psm: int = 6) -> Dict[str, Any]:
+def _ocr_with_confidence(processed_img: np.ndarray, psm: int = 6, lang: str = "eng") -> Dict[str, Any]:
     data = pytesseract.image_to_data(
         processed_img,
+        lang=lang,
         output_type=pytesseract.Output.DICT,
         config=f"--oem 3 --psm {psm} --dpi 300",
     )
@@ -133,7 +156,8 @@ def _ocr_with_confidence(processed_img: np.ndarray, psm: int = 6) -> Dict[str, A
             conf_val = float(conf)
         except Exception:
             conf_val = -1
-        if conf_val >= 30 and any(ch.isalnum() for ch in cleaned):
+        # For Hindi, alphanumeric check might be too strict, but we'll keep it for now
+        if conf_val >= 20:
             confidences.append(conf_val)
 
     text = " ".join(words).strip()
@@ -146,11 +170,53 @@ def _ocr_with_confidence(processed_img: np.ndarray, psm: int = 6) -> Dict[str, A
     }
 
 
-def extract_text_from_image(image_file) -> Dict[str, Any]:
+def extract_text_via_gemini(image_bytes: bytes) -> str:
+    """
+    Multimodal OCR using Gemini.
+    Converts image to base64 and queries Gemini Vision model.
+    """
+    try:
+        from backend.llm_manager import get_fallback_llm
+        base64_image = base64.b64encode(image_bytes).decode("utf-8")
+        
+        message = HumanMessage(
+            content=[
+                {
+                    "type": "text",
+                    "text": "Identify and transcribe all text present in this image precisely. "
+                            "Preserve spacing, lines, and formatting where possible. "
+                            "Do not include any chat commentary or conversational filler—only output the transcribed text."
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}"
+                    }
+                }
+            ]
+        )
+        
+        llm = get_fallback_llm()
+        response = llm.invoke([message])
+        extracted_text = getattr(response, "content", str(response)).strip()
+        return extracted_text
+    except Exception as e:
+        logger.error(f"Gemini Vision OCR failed: {e}")
+        raise e
+
+
+def extract_text_from_image(image_file, language: str = "english") -> Dict[str, Any]:
     """
     OCR with preprocessing, confidence score, and retry fallback.
-    Returns dict: {text, confidence, method, error}
+    Supports English and Hindi.
     """
+    t_start = time.perf_counter()
+    
+    # Map to tesseract lang codes
+    tess_lang = "hin+eng" if language.lower() == "hindi" and "hin" in _TESSERACT_LANGS else "eng"
+    if "hin" not in tess_lang and language.lower() == "hindi":
+        logger.warning("Hindi language pack not found in Tesseract, falling back to English.")
+
     try:
         if isinstance(image_file, (bytes, bytearray)):
             image_bytes = bytes(image_file)
@@ -164,83 +230,111 @@ def extract_text_from_image(image_file) -> Dict[str, Any]:
         else:
             raise ValueError("Unsupported image input type for OCR.")
 
-        variants = _preprocess_variants_for_ocr(image_bytes)
+        logger.debug("OCR input: %d bytes, language: %s", len(image_bytes), tess_lang)
 
+        if not _TESSERACT_CMD:
+            logger.info("Tesseract executable not found. Routing OCR task to Gemini Vision.")
+            text = extract_text_via_gemini(image_bytes)
+            elapsed_ms = (time.perf_counter() - t_start) * 1000
+            return {
+                "text": text,
+                "confidence": 100.0,
+                "method": "gemini_multimodal",
+                "error": None,
+                "processing_time_ms": round(elapsed_ms, 1),
+            }
+
+        variants = _preprocess_variants_for_ocr(image_bytes)
+        
         best = {
             "text": "",
             "confidence": 0.0,
             "quality": 0.0,
             "method": "none",
-            "error": None,
             "score": -1.0,
         }
 
-        fast_candidates = [
-            ("otsu", 6),
-            ("adaptive", 6),
-            ("otsu", 7),
-        ]
-
+        # Try fast path
+        fast_candidates = [("otsu", 6), ("adaptive", 6)]
         for variant_name, psm in fast_candidates:
-            candidate = _ocr_with_confidence(variants[variant_name], psm=psm)
-            text = (candidate.get("text") or "").strip()
-            confidence = float(candidate.get("confidence", 0.0) or 0.0)
-            quality = float(candidate.get("quality", 0.0) or 0.0)
-
-            if text and confidence >= 80 and quality >= 0.55:
+            candidate = _ocr_with_confidence(variants[variant_name], psm=psm, lang=tess_lang)
+            text = candidate.get("text", "").strip()
+            confidence = candidate.get("confidence", 0.0)
+            
+            if text and confidence >= 80:
+                elapsed_ms = (time.perf_counter() - t_start) * 1000
                 return {
                     "text": text,
-                    "confidence": round(confidence, 2),
+                    "confidence": confidence,
                     "method": f"{variant_name}_psm{psm}_fast",
                     "error": None,
+                    "processing_time_ms": round(elapsed_ms, 1),
                 }
 
+        # Full sweep if fast path fails
         for variant_name, processed in variants.items():
             for psm in (6, 11):
-                candidate = _ocr_with_confidence(processed, psm=psm)
-                text = (candidate.get("text") or "").strip()
-                confidence = float(candidate.get("confidence", 0.0) or 0.0)
-                quality = float(candidate.get("quality", 0.0) or 0.0)
+                candidate = _ocr_with_confidence(processed, psm=psm, lang=tess_lang)
+                text = candidate.get("text", "").strip()
+                confidence = candidate.get("confidence", 0.0)
+                quality = candidate.get("quality", 0.0)
 
-                if not text:
-                    continue
-
-                # Prioritize confidence/quality over sheer text length to avoid noisy winners.
-                score = confidence * 0.78 + quality * 100 * 0.22
+                score = confidence * 0.7 + quality * 30
                 if score > best["score"]:
                     best = {
                         "text": text,
-                        "confidence": round(confidence, 2),
-                        "quality": round(quality, 4),
+                        "confidence": confidence,
                         "method": f"{variant_name}_psm{psm}",
-                        "error": None,
-                        "score": score,
+                        "score": score
                     }
 
-        if best["text"]:
+        elapsed_ms = (time.perf_counter() - t_start) * 1000
+        return {
+            "text": best["text"],
+            "confidence": best["confidence"],
+            "method": best["method"],
+            "error": None,
+            "processing_time_ms": round(elapsed_ms, 1),
+        }
+
+    except Exception as exc:
+        try:
+            logger.info("Tesseract execution failed or not available. Falling back to Gemini Vision OCR...")
+            # If image_bytes is not defined yet (e.g. read error), we try to extract it from image_file
+            if 'image_bytes' not in locals():
+                if isinstance(image_file, (bytes, bytearray)):
+                    image_bytes = bytes(image_file)
+                elif isinstance(image_file, str):
+                    with open(image_file, "rb") as f:
+                        image_bytes = f.read()
+                elif hasattr(image_file, "getvalue"):
+                    image_bytes = image_file.getvalue()
+                elif hasattr(image_file, "read"):
+                    image_bytes = image_file.read()
+                else:
+                    raise ValueError("Unsupported image input type for OCR.")
+            text = extract_text_via_gemini(image_bytes)
+            elapsed_ms = (time.perf_counter() - t_start) * 1000
             return {
-                "text": best["text"],
-                "confidence": best["confidence"],
-                "method": best["method"],
+                "text": text,
+                "confidence": 95.0,
+                "method": "gemini_vision_fallback",
                 "error": None,
+                "processing_time_ms": round(elapsed_ms, 1),
+            }
+        except Exception as gemini_exc:
+            elapsed_ms = (time.perf_counter() - t_start) * 1000
+            return {
+                "text": "",
+                "confidence": 0.0,
+                "method": "error",
+                "error": f"Tesseract error: {exc}. Gemini fallback error: {gemini_exc}",
+                "processing_time_ms": round(elapsed_ms, 1),
             }
 
-        return {
-            "text": "",
-            "confidence": 0.0,
-            "method": "no_text_detected",
-            "error": None,
-        }
-    except Exception as exc:
-        message = str(exc)
-        if "tesseract is not installed" in message.lower():
-            message = (
-                f"{message} Set TESSERACT_CMD in .env or install Tesseract at "
-                r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-            )
-        return {
-            "text": "",
-            "confidence": 0.0,
-            "method": "error",
-            "error": message,
-        }
+def is_page_scanned(text: str, threshold: int = 50) -> bool:
+    printable = (text or "").strip()
+    return len(printable) < threshold
+
+def extract_text_from_pdf_page(page_image_bytes: bytes, language: str = "english") -> Dict[str, Any]:
+    return extract_text_from_image(page_image_bytes, language=language)
