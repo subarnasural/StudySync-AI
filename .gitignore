@@ -17,4 +17,5 @@ temp_img/
 *.log
 .pytest_cache/
 *progress*.json
+data/analytics_data.json
 scratch/
